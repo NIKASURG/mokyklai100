@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mokyklai 100</title>
+    <link rel="stylesheet" href="makijažas.css">
+</head>
+
+<body>
+    <canvas id="ekranas"></canvas>
+    <h1 class="mok">Mokyklai 100</h1>
+    <script src="veiksmai.js"></script>
+    <div id="score">Susprogdinta balionų: 0</div>
+    <script>
+        const canvas = document.getElementById("ekranas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const eaukstis = window.innerHeight;
+
+        const imageSources = [
+            "rbalionas.png",
+            "mbalionas.png",
+            "gbalionas.png",
+            "pbalionas.png",
+            "rbalionas.png",
+            "mbalionas.png",
+            "gbalionas.png",
+            "pbalionas.png",
+            "rbalionas.png",
+            "mbalionas.png",
+            "gbalionas.png",
+            "pbalionas.png",
+        ];
+
+        const images = [];
+
+        function loadImage(src) {
+            const img = new Image();
+            img.src = src;
+            img.onload = () => {
+                images.push(img);
+                if (images.length === imageSources.length) {
+                    initializeImages();
+                }
+            };
+        }
+
+        imageSources.forEach(loadImage);
+
+        const imageInfos = [];
+        let poppedBalloons = 0; // Pradiniame etape nesprogdintų balionų skaičius
+
+        // Pridedame isPopped atributą kiekvienam imageInfo objektui
+        images.forEach((image) => {
+            const x = Math.random() * (canvas.width - image.width);
+            const y = canvas.height;
+            imageInfos.push({
+                image,
+                x,
+                y,
+                speed: Math.random() * 4 + 1,
+                isPopped: false // Pradinis baliono būsena - nesprogdintas
+            });
+        });
+
+        // Nauja funkcija, kuri pašalina sprogdintus balionus iš masyvo
+        function removePoppedBalloons() {
+            for (let i = imageInfos.length - 1; i >= 0; i--) {
+                if (imageInfos[i].isPopped) {
+                    imageInfos.splice(i, 1);
+                }
+            }
+        }
+
+        // Baliono sprogimo logika
+        canvas.addEventListener("click", (event) => {
+            const clickX = event.clientX;
+            const clickY = event.clientY;
+
+            imageInfos.forEach((imageInfo) => {
+                const balionoCentroX = imageInfo.x + imageInfo.image.width / 2;
+                const balionoCentroY = imageInfo.y + imageInfo.image.height / 2;
+
+                const atstumas = Math.sqrt(
+                    (balionoCentroX - clickX) ** 2 + (balionoCentroY - clickY) ** 2
+                );
+
+                if (atstumas <= imageInfo.image.width / 2) {
+                    if (!imageInfo.isClicked) {
+                        imageInfo.isClicked = true;
+                        setTimeout(() => {
+                            imageInfo.x = Math.random() * (canvas.width - imageInfo.image.width);
+                            imageInfo.y = canvas.height;
+                            imageInfo.isClicked = false;
+                            imageInfo.isPopped = true; // Pažymime balioną kaip sprogdintą
+                            poppedBalloons++; // Padidiname susprogdintų balionų skaičių
+                            updateScore(); // Atnaujiname balionų skaičiaus rodymą
+                            removePoppedBalloons(); // Šaliname sprogdintus balionus iš masyvo
+                        }, 100); // Laiko intervalas, kai balionas išnyks (100ms)
+                    }
+                }
+            });
+        });
+    </script>
+    <style>
+        .mok {
+            text-align: center;
+            font-size: 500%;
+            margin-top: -40%;
+            font-family: 'Cursive', cursive;
+            color: #FF0000;
+            text-align: center;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        body {
+            background-color: black;
+        }
+        
+        #score {
+            background-color: #FF0000;
+        }
+    </style>
+</body>
+
+</html>
