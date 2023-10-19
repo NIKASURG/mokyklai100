@@ -22,18 +22,7 @@
         const eaukstis = window.innerHeight;
 
         const imageSources = [
-            "rbalionas.png",
-            "mbalionas.png",
-            "gbalionas.png",
-            "pbalionas.png",
-            "rbalionas.png",
-            "mbalionas.png",
-            "gbalionas.png",
-            "pbalionas.png",
-            "rbalionas.png",
-            "mbalionas.png",
-            "gbalionas.png",
-            "pbalionas.png",
+            // Image URLs here
         ];
 
         const images = [];
@@ -52,59 +41,107 @@
         imageSources.forEach(loadImage);
 
         const imageInfos = [];
-        let poppedBalloons = 0; // Pradiniame etape nesprogdintų balionų skaičius
+        let poppedBalloons = 0;
 
-        // Pridedame isPopped atributą kiekvienam imageInfo objektui
-        images.forEach((image) => {
-            const x = Math.random() * (canvas.width - image.width);
-            const y = canvas.height;
-            imageInfos.push({
-                image,
-                x,
-                y,
-                speed: Math.random() * 4 + 1,
-                isPopped: false // Pradinis baliono būsena - nesprogdintas
+        function initializeImages() {
+            images.forEach((image) => {
+                const x = Math.random() * (canvas.width - image.width);
+                const y = canvas.height;
+                imageInfos.push({
+                    image,
+                    x,
+                    y,
+                    speed: Math.random() * 4 + 1
+                });
             });
-        });
 
-        // Nauja funkcija, kuri pašalina sprogdintus balionus iš masyvo
-        function removePoppedBalloons() {
-            for (let i = imageInfos.length - 1; i >= 0; i--) {
-                if (imageInfos[i].isPopped) {
-                    imageInfos.splice(i, 1);
+            moveImages();
+        }
+        const maxVisibleImages = 100; // Maximum number of visible images
+
+        function moveImages() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Keep track of visible images
+            const visibleImages = [];
+
+            imageInfos.forEach((imageInfo) => {
+                imageInfo.y -= imageInfo.speed;
+                ctx.drawImage(imageInfo.image, imageInfo.x, imageInfo.y);
+
+                if (imageInfo.y + imageInfo.image.height >= 0) {
+                    visibleImages.push(imageInfo);
+                } else {
+                    // Reset and reuse images that are no longer visible
+                    imageInfo.x = Math.random() * (canvas.width - imageInfo.image.width);
+                    imageInfo.y = eaukstis;
+                    imageInfo.isClicked = false;
                 }
+            });
+
+            // Limit the number of images to the maximum visible images
+            if (visibleImages.length > maxVisibleImages) {
+                const extraImages = visibleImages.slice(maxVisibleImages);
+                extraImages.forEach((imageInfo) => {
+                    imageInfo.x = Math.random() * (canvas.width - imageInfo.image.width);
+                    imageInfo.y = eaukstis;
+                    imageInfo.isClicked = false;
+                });
             }
+
+            requestAnimationFrame(moveImages);
         }
 
-        // Baliono sprogimo logika
+        function moveImages() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            imageInfos.forEach((imageInfo) => {
+                imageInfo.y -= imageInfo.speed;
+                ctx.drawImage(imageInfo.image, imageInfo.x, imageInfo.y);
+
+                if (imageInfo.y + imageInfo.image.height < 0) {
+                    imageInfo.x = Math.random() * (canvas.width - imageInfo.image.width);
+                    imageInfo.y = eaukstis;
+                }
+            });
+
+            requestAnimationFrame(moveImages);
+        }
+
+        // Handle click events using event delegation
         canvas.addEventListener("click", (event) => {
             const clickX = event.clientX;
             const clickY = event.clientY;
 
             imageInfos.forEach((imageInfo) => {
-                const balionoCentroX = imageInfo.x + imageInfo.image.width / 2;
-                const balionoCentroY = imageInfo.y + imageInfo.image.height / 2;
-
-                const atstumas = Math.sqrt(
-                    (balionoCentroX - clickX) ** 2 + (balionoCentroY - clickY) ** 2
-                );
-
-                if (atstumas <= imageInfo.image.width / 2) {
+                if (
+                    clickX >= imageInfo.x &&
+                    clickX <= imageInfo.x + imageInfo.image.width &&
+                    clickY >= imageInfo.y &&
+                    clickY <= imageInfo.y + imageInfo.image.height
+                ) {
                     if (!imageInfo.isClicked) {
                         imageInfo.isClicked = true;
                         setTimeout(() => {
                             imageInfo.x = Math.random() * (canvas.width - imageInfo.image.width);
-                            imageInfo.y = canvas.height;
+                            imageInfo.y = eaukstis;
                             imageInfo.isClicked = false;
-                            imageInfo.isPopped = true; // Pažymime balioną kaip sprogdintą
-                            poppedBalloons++; // Padidiname susprogdintų balionų skaičių
-                            updateScore(); // Atnaujiname balionų skaičiaus rodymą
-                            removePoppedBalloons(); // Šaliname sprogdintus balionus iš masyvo
-                        }, 100); // Laiko intervalas, kai balionas išnyks (100ms)
+                            poppedBalloons++;
+                            updateScore();
+                        }, 100);
                     }
                 }
             });
         });
+
+        // Atnaujina balionų skaičių HTML elemente
+        function updateScore() {
+            const scoreElement = document.getElementById("score");
+            scoreElement.textContent = `Susprogdinta balionų: ${poppedBalloons}`;
+        }
+
+        // Initialize the score display
+        updateScore();
     </script>
     <style>
         .mok {
@@ -119,7 +156,7 @@
         }
         
         body {
-            background-color: black;
+            background-color: rgb(212, 124, 247);
         }
         
         #score {
